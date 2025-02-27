@@ -107,4 +107,3 @@ int q_size(struct list_head *head)
     }
     return n;
 }
-
