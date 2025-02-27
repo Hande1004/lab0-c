@@ -230,3 +230,98 @@ void q_reverseK(struct list_head *head, int k)
 }
 
 
+struct list_head *merge(struct list_head *l1,
+                        struct list_head *l2,
+                        bool descend)
+{
+    struct list_head tmp;
+    INIT_LIST_HEAD(&tmp);
+    struct list_head *tail = &tmp;
+    if (!descend) {
+        while (l1 && l2) {
+            const element_t *node1 = list_entry(l1, element_t, list);
+            const element_t *node2 = list_entry(l2, element_t, list);
+            if (strcmp(node1->value, node2->value) <= 0) {
+                tail->next = l1;
+                l1->prev = tail;
+                tail = tail->next;
+                l1 = l1->next;
+            } else {
+                tail->next = l2;
+                l2->prev = tail;
+                tail = tail->next;
+                l2 = l2->next;
+            }
+        }
+    } else {
+        while (l1 && l2) {
+            const element_t *node1 = list_entry(l1, element_t, list);
+            const element_t *node2 = list_entry(l2, element_t, list);
+            if (strcmp(node1->value, node2->value) >= 0) {
+                tail->next = l1;
+                l1->prev = tail;
+                tail = tail->next;
+                l1 = l1->next;
+            } else {
+                l2->prev = tail;
+                tail->next = l2;
+                tail = tail->next;
+                l2 = l2->next;
+            }
+        }
+    }
+    if (l1) {
+        tail->next = l1;
+        l1->prev = tail;
+    }
+    if (l2) {
+        tail->next = l2;
+        l2->prev = tail;
+    }
+    return tmp.next;
+}
+struct list_head *mergeSortList(struct list_head *node, bool descend)
+{
+    if (!node || !node->next)
+        return node;
+    struct list_head *fast = node->next;
+    struct list_head *slow = node;
+    // split list
+    while (fast && fast->next) {
+        slow = slow->next;
+        fast = fast->next->next;
+    }
+    fast = slow->next;
+    slow->next = NULL;
+    if (fast) {
+        fast->prev = NULL;
+    }
+
+    // sort each list
+    struct list_head *l1 = mergeSortList(node, descend);
+    struct list_head *l2 = mergeSortList(fast, descend);
+    return merge(l1, l2, descend);
+}
+/* Sort elements of queue in ascending/descending order */
+void q_sort(struct list_head *head, bool descend)
+{
+    if (!head || list_empty(head) || list_is_singular(head))
+        return;
+    struct list_head *first_node = head->next;
+    struct list_head *last_node = head->prev;
+    first_node->prev = NULL;
+    last_node->next = NULL;
+    struct list_head *merge_pos = mergeSortList(first_node, descend);
+    if (!merge_pos) {
+        INIT_LIST_HEAD(head);
+        return;
+    }
+    head->next = merge_pos;
+    merge_pos->prev = head;
+    while (merge_pos->next) {
+        merge_pos = merge_pos->next;
+    }
+    merge_pos->next = head;
+    head->prev = merge_pos;
+}
+
