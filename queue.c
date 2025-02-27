@@ -325,3 +325,52 @@ void q_sort(struct list_head *head, bool descend)
     head->prev = merge_pos;
 }
 
+/* Remove every node which has a node with a strictly less value anywhere to
+ * the right side of it */
+int q_ascend(struct list_head *head)
+{
+    // https://leetcode.com/problems/remove-nodes-from-linked-list/
+    if (!head || list_empty(head))
+        return 0;
+    if (list_is_singular(head))
+        return 1;
+    struct list_head *pos, *safe;
+    element_t *node = list_entry(head->prev, element_t, list);
+    const char *mini_value = node->value;
+    for (pos = head->prev, safe = pos->prev; pos != head;
+         pos = safe, safe = pos->prev) {
+        node = list_entry(pos, element_t, list);
+        if (strcmp(node->value, mini_value) > 0) {
+            list_del(pos);
+            q_release_element(node);
+        } else {
+            mini_value = node->value;
+        }
+    }
+    return q_size(head);
+}
+
+/* Remove every node which has a node with a strictly greater value anywhere to
+ * the right side of it */
+int q_descend(struct list_head *head)
+{
+    // https://leetcode.com/problems/remove-nodes-from-linked-list/
+    if (!head || list_empty(head))
+        return 0;
+    if (list_is_singular(head))
+        return 1;
+    struct list_head *pos, *safe;
+    element_t *node = list_entry(head->prev, element_t, list);
+    const char *max_value = node->value;
+    for (pos = head->prev, safe = pos->prev; pos != head;
+         pos = safe, safe = pos->prev) {
+        node = list_entry(pos, element_t, list);
+        if (strcmp(node->value, max_value) < 0) {
+            list_del(pos);
+            q_release_element(node);
+        } else {
+            max_value = node->value;
+        }
+    }
+    return q_size(head);
+}
