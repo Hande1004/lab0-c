@@ -316,6 +316,8 @@ void q_sort(struct list_head *head, bool descend)
         INIT_LIST_HEAD(head);
         return;
     }
+    head->next = merge_pos;
+    merge_pos->prev = head;
     while (merge_pos->next) {
         merge_pos = merge_pos->next;
     }
