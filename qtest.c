@@ -841,6 +841,28 @@ static bool do_reverseK(int argc, char *argv[])
     q_show(3);
     return !error_check();
 }
+void q_shuffle(struct list_head *head);
+static bool do_shuffle(int argc, char *argv[])
+{
+    if (argc != 1) {
+        report(1, "%s takes too much arguments", argv[0]);
+        return false;
+    }
+
+    if (!current || !current->q) {
+        report(3, "Warning: Calling shuffle on null queue");
+        return false;
+    }
+    error_check();
+
+    if (exception_setup(true)) {
+        q_shuffle(current->q);
+    }
+    exception_cancel();
+    set_noallocate_mode(false);
+    q_show(3);
+    return !error_check();
+}
 
 static bool do_merge(int argc, char *argv[])
 {
@@ -1096,6 +1118,7 @@ static void console_init()
                 "");
     ADD_COMMAND(reverseK, "Reverse the nodes of the queue 'K' at a time",
                 "[K]");
+    ADD_COMMAND(shuffle, "shuffle the queue randomly", "");
     add_param("length", &string_length, "Maximum length of displayed string",
               NULL);
     add_param("malloc", &fail_probability, "Malloc failure probability percent",
@@ -1365,6 +1388,33 @@ uintptr_t os_random(uintptr_t seed)
         x = random_shuffle(x);
     assert(x);
     return x;
+}
+
+void q_shuffle(struct list_head *head)
+{
+    if (!head || list_empty(head) || list_is_singular(head))
+        return;
+    int i = q_size(head);
+    int len = i;
+    struct list_head *j_pos = head;
+    struct list_head *i_pos = head->prev;
+    for (int cnt = 1; cnt < len; cnt++) {
+        int j = rand() % i;
+        for (int m = 0; m < j; m++) {
+            j_pos = j_pos->next;
+        }
+        struct list_head *j_prev = j_pos->prev;
+        struct list_head *i_prev = i_pos->prev;
+        if (i_prev == j_pos) {
+            list_move(j_pos, i_pos);
+        } else {
+            list_move(i_pos, j_pos);
+            list_move(j_pos, j_prev);
+        }
+        i = i - 1;
+        j_pos = head;
+        i_pos = i_pos->prev;
+    }
 }
 
 #define BUFSIZE 256
