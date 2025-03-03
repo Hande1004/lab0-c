@@ -13,7 +13,6 @@
 #include <constant.h>
 #include <math.h>
 #include <stddef.h>
-#include <stdint.h>
 
 void t_push(t_context_t *ctx, double x, uint8_t class)
 {
@@ -50,9 +49,7 @@ void t_init(t_context_t *ctx)
 }
 int cmp(const int64_t *a, const int64_t *b)
 {
-    if (*a == *b)
-        return 0;
-    return (*a > *b) ? 1 : -1;
+    return (int) (*a - *b);
 }
 
 int64_t percentile(const int64_t *a_sorted, double which, size_t size)
