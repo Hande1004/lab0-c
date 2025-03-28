@@ -108,6 +108,7 @@ static int linux_getrandom(void *buf, size_t n)
     assert(n == 0);
     return 0;
 }
+
 #endif /* (defined(__linux__) || defined(__GNU__)) && (defined(USE_GLIBC) || \
           defined(SYS_getrandom)) */
 

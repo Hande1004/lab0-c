@@ -38,7 +38,7 @@ $(GIT_HOOKS):
 	@echo
 
 OBJS := qtest.o report.o console.o harness.o queue.o \
-        random.o dudect/constant.o dudect/fixture.o dudect/ttest.o \
+        random.o  xorshift.o dudect/constant.o dudect/fixture.o dudect/ttest.o \
         shannon_entropy.o \
         linenoise.o web.o
 

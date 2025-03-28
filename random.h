@@ -1,6 +1,7 @@
 #ifndef LAB0_RANDOM_H
 #define LAB0_RANDOM_H
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 

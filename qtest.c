@@ -22,6 +22,7 @@
 #include "dudect/fixture.h"
 #include "list.h"
 #include "random.h"
+#include "xorshift.h"
 
 /* Shannon entropy */
 extern double shannon_entropy(const uint8_t *input_data);
@@ -180,6 +181,20 @@ static void fill_rand_string(char *buf, size_t buf_size)
     buf[len] = '\0';
 }
 
+static void fill_rand_string_xorshift(char *buf, size_t buf_size)
+{
+    size_t len = 0;
+    while (len < MIN_RANDSTR_LEN)
+        len = rand() % buf_size;
+
+    uint64_t randstr_buf_64[MAX_RANDSTR_LEN] = {0};
+    randombytes_xorshift((uint8_t *) randstr_buf_64, len * sizeof(uint64_t));
+    for (size_t n = 0; n < len; n++)
+        buf[n] = charset[randstr_buf_64[n] % (sizeof(charset) - 1)];
+
+    buf[len] = '\0';
+}
+
 /* insertion */
 static bool queue_insert(position_t pos, int argc, char *argv[])
 {
@@ -201,6 +216,7 @@ static bool queue_insert(position_t pos, int argc, char *argv[])
 
     char *lasts = NULL;
     char randstr_buf[MAX_RANDSTR_LEN];
+    char xorshiftstr_buf[MAX_RANDSTR_LEN];
     int reps = 1;
     bool ok = true, need_rand = false;
     if (argc != 2 && argc != 3) {
@@ -221,6 +237,11 @@ static bool queue_insert(position_t pos, int argc, char *argv[])
         inserts = randstr_buf;
     }
 
+    if (!strcmp(inserts, "xorshift")) {
+        need_rand = true;
+        inserts = xorshiftstr_buf;
+    }
+
     if (!current || !current->q)
         report(3, "Warning: Calling insert %s on null queue",
                pos == POS_TAIL ? "tail" : "head");
@@ -228,8 +249,14 @@ static bool queue_insert(position_t pos, int argc, char *argv[])
 
     if (current && exception_setup(true)) {
         for (int r = 0; ok && r < reps; r++) {
-            if (need_rand)
-                fill_rand_string(randstr_buf, sizeof(randstr_buf));
+            if (need_rand) {
+                if (inserts == randstr_buf) {
+                    fill_rand_string(randstr_buf, sizeof(randstr_buf));
+                } else if (inserts == xorshiftstr_buf) {
+                    fill_rand_string_xorshift(xorshiftstr_buf,
+                                              sizeof(xorshiftstr_buf));
+                }
+            }
             bool rval = pos == POS_TAIL ? q_insert_tail(current->q, inserts)
                                         : q_insert_head(current->q, inserts);
             if (rval) {
@@ -1369,6 +1396,7 @@ static bool sanity_check()
 
     return true;
 }
+
 
 uintptr_t os_random(uintptr_t seed)
 {
